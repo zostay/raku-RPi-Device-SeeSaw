@@ -1,256 +1,40 @@
 use v6;
 
-use RPi::Device::SMBus;
-use RPi::Device::SeeSaw::DigitalIO;
-use RPi::Device::SeeSaw::PinMap :all;
-use RPi::Device::SeeSaw::Types :short-names;
+use RPi::Device::SeeSaw::Common;
 
 unit class RPi::Device::SeeSaw does RPi::Device::SeeSaw::Common;
 
 enum (
-    ADC-Input0-Pin => 2,
-    ADC-Input1-Pin => 3,
-    ADC-Input2-Pin => 4,
-    ADC-Input3-Pin => 5,
-);
+    ADC-Input0 => 2,
+    ADC-Input1 => 3,
+    ADC-Input2 => 4,
+    ADC-Input3 => 5,
+) is export(:short-names);
 
 my constant Int %ADC-PINS{Int} =
-    ADC-Input0-Pin, 0,
-    ADC-Input1-Pin, 1,
-    ADC-Input2-Pin, 2,
-    ADC-Input3-Pin, 3,
+    ADC-Input0, 0,
+    ADC-Input1, 1,
+    ADC-Input2, 2,
+    ADC-Input3, 3,
     ;
+
+method adc-pins(--> Hash[Int, Int]) { %ADC-PINS }
 
 enum (
-    PWM0-Pin => 4,
-    PWM1-Pin => 5,
-    PWM2-Pin => 6,
-    PWM3-Pin => 6,
-);
+    PWM0 => 4,
+    PWM1 => 5,
+    PWM2 => 6,
+    PWM3 => 7,
+) is export(:short-names);
 
 my constant Int %PWM-PINS{Int} =
-    PWM0-Pin, 0,
-    PWM1-Pin, 1,
-    PWM2-Pin, 2,
-    PWM3-Pin, 3,
+    PWM0, 0,
+    PWM1, 1,
+    PWM2, 2,
+    PWM3, 3,
     ;
 
-
-method get-digital-pin(PinNumber:D $pin --> Bool:D() $value) {
-    my ($bank, $bulk) = self!pin-to-bulk($pin);
-    self.digital-read-bulk($bulk, :$bank) != 0;
-}
-
-method !bank-select($bitset, $bank) {
-    my buf8 $buf .= new;
-    if $bank eq 'A' {
-        $buf.write-uint32(0, $bitset, BigEndian);
-    }
-    else {
-        $buf.write-uint64(0, $bitset, BigEndian);
-    }
-    $buf;
-}
-
-method !double-bank($bits-a, $bits-b) {
-    my buf8 $buf .= new;
-    $buf.write-uint32(0, $bits-a, BigEndian);
-    $buf.write-uint32(4, $bits-b, BigEndian);
-    $buf;
-}
-
-method get-digital-pins(PinBitset:D $pins, PinBank:D :$bank = 'A' --> PinBitset:D) {
-    self!read32:
-        GPIO-BASE,
-        GPIO-BULK,
-        self!bank-select($pins, $bank),
-        ;
-}
-
-method set-gpio-interrupts(PinBitset:D $pins, Bool:D() $enabled) {
-    self!write:
-        GPIO-BASE,
-        $enabled ?? GPIO-INTENSET !! GPIO-INTENCLR,
-        self!bank-select($pins, 'A'),
-        ;
-}
-
-method get-analog-pin(PinNumber:D $pin --> UShort:D) {
-    die "Invalid ADC pin"
-        without $!pin-mapping.analog-pins.{ $pin };
-
-    self!read16:
-        ADC-BASE,
-        ADC-CHANNEL-OFFSET + $!pin-mapping.analog-pins.{ $pin },
-        ;
-}
-
-method get-touch-pin(PinNumber:D $pin --> UShort:D) {
-    die "Invalid touch pin"
-        without $!pin-mapping.touch-pins.{ $pin };
-
-    self!read16:
-        TOUCH-BASE,
-        TOUCH-CHANNEL-OFFSET + $!pin-mapping.touch-pins.{ $pin },
-        ;
-}
-
-multi method set-pins-mode(
-    PinBitset:D $pins,
-    PinMode:D() $mode,
-    PinBank:D :$bank = 'A',
-) {
-    if $bank eq 'A' {
-        self.set-pins-mode($pins, 0, $mode);
-    }
-    else {
-        self.set-pins-mode(0, $pins, $mode);
-    }
-}
-
-multi method set-pins-mode(
-    PinBitset:D $pins-a,
-    PinBitset:D $pins-b,
-    PinMode:D() $mode,
-) {
-    my $cmd = self!boudl-bank($pins-a, $pins-b);
-    given $mode {
-        when Output {
-            self!write: GPIO-BASE, GPIO-DIRSET-BULK, $cmd;
-        }
-        when Input {
-            self!write: GPIO-BASE, GPIO-DIRCLR-BULK, $cmd;
-        }
-        when InputPullup {
-            self!write: GPIO-BASE, GPIO-DIRCLR-BULK, $cmd;
-            self!write: GPIO-BASE, GPIO-PULLENSET, $cmd;
-            self!write: GPIO-BASE, GPIO-BULK-SET, $cmd;
-        }
-        when InputPulldown {
-            self!write: GPIO-BASE, GPIO-DIRCLR-BULK, $cmd;
-            self!write: GPIO-BASE, GPIO-PULLENSET, $cmd;
-            self!write: GPIO-BASE, GPIO-BULK-CLR, $cmd;
-        }
-        default {
-            die "Invalid pin mode";
-        }
-    }
-}
-
-method set-digital-pins(
-    PinBitset:D $pins,
-    Bool:D() $value,
-    PinBank:D :$bank = 'A',
-) {
-    my $op = $value ?? GPIO-BULK-SET !! GPIO-BULK-CLR;
-    self!write:
-        GPIO-BASE,
-        $op,
-        self!pin-to-bulk($pins, $bank),
-        ;
-}
-
-method set-pwm-frequency(PinNumber:D $pin, UShort:D $value) {
-    with $!pin-mapping.pwm-pins.{ $pin } -> $offset {
-        if $!pin-mapping.pwm-width == 16 {
-            $cmd = buf8.new($offset, $value +> 8, $value +& 0xFF);
-        }
-        elsif $value ~~ UByte {
-            $cmd = buf8.new($offset, $value);
-        }
-        else {
-            die "Invalid value for 8-bit PWM";
-        }
-
-        self!write: TIMER-BASE, TIMER-PWM, $cmd;
-        sleep 0.001;
-    }
-    else {
-        die "Invalid PWM pin";
-    }
-}
-
-method set-i2c-address(UByte:D $address) {
-    self!write: EEPROM-BASE, EEPROM-I2C-ADDR, buf8.new($address);
-    sleep(0.250);
-    $!i2c-bus .= new(device => $i2c-device, address => $i2c-address);
-    self.software-reset;
-}
-
-method get-i2c-address(--> UByte:D) {
-    self!read8: EEPROM-BASE, EEPROM-I2C-ADDR;
-}
-
-method set-uart-baud(ULong:D $baud) {
-    my buf8 $cmd .= new;
-    $cmd.write-uint32: $baud;
-    self!write: SERCOM0-BASE, SERCOM-BAUD, $cmd;
-}
-
-method !read32(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> ULong:D) {
-    my $buf = self!read: $reg-base, $reg, 4, :$delay;
-    $buf.read-uint32(0, BigEndian);
-}
-
-method !read16(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> UShort:D) {
-    my $buf = self!read: $reg-base, $reg, 2, :$delay;
-    $buf.read-uint16(0, BigEndian);
-}
-
-method !read8(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> UByte:D) {
-    my $buf = self!read: $reg-base, $reg, 1, :$delay;
-    $buf.read-uint8(0, BigEndian);
-}
-
-subset I2CReadLength of UInt where 32 >= * >= 1;
-method !read(UByte:D $reg-base, UByte:D $reg, I2CReadLength:D $length, Rat:D() :$delay = 0.001 --> buf8:D) {
-    self!write: $reg-base, $reg;
-    with $.data-ready {
-        until .value { #`[nop] }
-    }
-    else {
-        sleep(delay);
-    }
-
-    buf8.new(gather take $!i2c-bus.read-byte for ^$length)
-}
-
-method !write(UByte:D $reg-base, UByte:D $reg, buf8:D $buf = buf8.new) {
-    my buf8 $write-buf .= new($reg-base, $reg);
-    $write-buf.append: $buf;
-
-    with $.data-ready {
-        until .value { #`[nop] }
-    }
-
-    $!i2c-bus.write-byte($_) for @($write-buf);
-}
-
-################################################################################
-#
-# These next two seem like curious out-of-place additions to this code that I'd
-# like to move somewhere else.
-#
-method get-moisture(--> UTwelveBit:D) {
-    my $moisture = 4096;
-    for ^4 {
-        return $moisture if $ret ~~ UTwelveBit;
-
-        $moisture = self!read16:
-            TOUCH-BASE,
-            TOUCH-CHANNEL-OFFSET,
-            :delay(0.005),
-            ;
-        sleep(0.001);
-    }
-
-    die "Could not get a valid moisture reading.";
-}
-
-method get-temperature(--> UShortRat:D) {
-    my $value = self!read32(STATUS-BASE, STTATUS-TEMP, :delay(0.005));
-    ($value +& 0x3FFF_FFFF) / 65536;
-}
+method pwm-pins(--> Hash[Int, Int]) { %PWM-PINS }
 
 =begin pod
 

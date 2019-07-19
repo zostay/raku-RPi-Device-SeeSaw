@@ -13,8 +13,8 @@ constant EEPROM-I2C-ADDR = 0x3F;
 my constant CRICKIT-PID    = 9999;
 my constant ROBOHATMM1-PID = 9998;
 
-method adc-pins(--> Map) { ... }
-method pwm-pins(--> Map) { ... }
+method adc-pins(--> Hash[Int, Int]) { ... }
+method pwm-pins(--> Hash[Int, Int]) { ... }
 
 method software-reset() {
     self.write: Status-Base, Status-SwRst, blob8.new(0xFF);
@@ -61,7 +61,7 @@ multi method pin-mode-bulk(
 }
 
 multi method analog-write(PinNumber:D $pin, UShort:D $value) {
-    with $!pin-mapping.pwm-pins.{ $pin } -> $offset {
+    with $.pwm-pins.{ $pin } -> $offset {
         self.write-uint16: Timer-Base, Timer-PWM, $value;
     }
     else {
@@ -99,11 +99,11 @@ method set-gpio-interrupts(PinBitset:D $pins, Bool:D() $enabled) {
 
 method analog-read(PinNumber:D $pin --> UShort:D) {
     die "Invalid ADC pin"
-        without $!pin-mapping.adc-pins.{ $pin };
+        without $.adc-pins.{ $pin };
 
     self.read-uint16:
         ADC-Base,
-        ADC-Channel-Offset + $!pin-mapping.adc-pins.{ $pin },
+        ADC-Channel-Offset + $.adc-pins.{ $pin },
         ;
 }
 
@@ -118,7 +118,7 @@ method touch-read(PinNumber:D $pin --> UShort:D) {
 }
 
 method set-pwm-frequency(PinNumber:D $pin, UShort:D $value) {
-    with $!pin-mapping.pwm-pins.{ $pin } -> $offset {
+    with $.pwm-pins.{ $pin } -> $offset {
         self.write-uint16: Timer-Base, Timer-PWM, $value;
         sleep 0.001;
     }
@@ -232,13 +232,13 @@ This role also implements L<RPi::Device::SeeSaw::Interface>, which defines the l
 
 =head2 method adc-pins
 
-    method adc-pins(--> Map)
+    method adc-pins(--> Hash[Int, Int])
 
 This method must return a map of port pin numbers to channel numbers for the Analog-to-Digital pins used for C<analog-read> operations.
 
 =head2 method pwm-pins
 
-    method pwm-pins(--> Map)
+    method pwm-pins(--> Hash[Int, Int])
 
 This method must return a map of port pin numbers to channel numbers for the Pulse-Width-Modulation pins used for C<analog-write> operations.
 
