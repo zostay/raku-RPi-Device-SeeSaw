@@ -163,7 +163,7 @@ role RPi::Device::SeeSaw::Interface {
     }
 
     method read(UByte:D $reg-base, UByte:D $reg, I2CReadLength:D $length, Rat:D() :$delay = 0.001 --> blob8:D) {
-        self.do-write($reg-base, $reg);
+        self.do-write($reg-base, $reg, blob8.new);
 
         sleep $delay;
         with &.flow {
@@ -233,7 +233,7 @@ role RPi::Device::SeeSaw::Interface {
         self.do-write($reg-base, $reg, $buf);
     }
 
-    method do-write(UByte:D $reg-base, UByte:D $reg, blob8:D $buf = blob8.new) {
+    method do-write(UByte:D $reg-base, UByte:D $reg, blob8:D $buf) {
         ...
     }
 }
