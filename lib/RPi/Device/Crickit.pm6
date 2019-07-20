@@ -4,7 +4,9 @@ use RPi::Device::SeeSaw::Common;
 
 unit class RPi::Device::Crickit does RPi::Device::SeeSaw::Common;
 
-enum (
+our constant DEFAULT-ADDRESS = 0x49;
+
+enum Signal-IO is export(:pins, :signals) (
     Signal1 => 2,
     Signal2 => 3,
     Signal3 => 40,
@@ -13,33 +15,35 @@ enum (
     Signal6 => 10,
     Signal7 => 9,
     Signal8 => 8,
-) is export(:short-names);
+);
 
-enum (
+enum Servo-Output is export(:pins, :servos) (
     Servo4 => 14,
     Servo3 => 15,
     Servo2 => 16,
     Servo1 => 17,
-) is export(:short-names);
+);
 
-enum (
+enum Motor-Output is export(:pins, :motors) (
     Motor-A1 => 22,
     Motor-A2 => 23,
     Motor-B1 => 19,
     Motor-B2 => 18,
+);
 
+enum Drive-Output is export(:pins, :drives) (
     Drive1 => 13,
     Drive2 => 12,
     Drive3 => 43,
     Drive4 => 42,
-) is export(:short-names);
+);
 
-enum (
+enum Touch-Input is export(:pins, :touch) (
     Touch1 => 0,
     Touch2 => 1,
     Touch3 => 2,
     Touch4 => 3,
-) is export(:short-names);
+);
 
 my constant Int %ADC-PINS{Int} =
     Signal1, 0,

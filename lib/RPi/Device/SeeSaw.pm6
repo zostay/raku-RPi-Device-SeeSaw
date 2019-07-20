@@ -4,37 +4,43 @@ use RPi::Device::SeeSaw::Common;
 
 unit class RPi::Device::SeeSaw does RPi::Device::SeeSaw::Common;
 
-enum (
+our constant DEFAULT-ADDRESS = 0x49;
+
+enum ADC-Input is export(:pins, :adc) (
     ADC-Input0 => 2,
     ADC-Input1 => 3,
     ADC-Input2 => 4,
     ADC-Input3 => 5,
-) is export(:short-names);
+);
 
-my constant Int %ADC-PINS{Int} =
+my constant %ADC-PINS := Hash[Int, Int].new(
     ADC-Input0, 0,
     ADC-Input1, 1,
     ADC-Input2, 2,
     ADC-Input3, 3,
-    ;
+);
 
 method adc-pins(--> Hash[Int, Int]) { %ADC-PINS }
 
-enum (
+enum PWM-Output is export(:pins, :pwm) (
     PWM0 => 4,
     PWM1 => 5,
     PWM2 => 6,
     PWM3 => 7,
-) is export(:short-names);
+);
 
-my constant Int %PWM-PINS{Int} =
+my constant %PWM-PINS := Hash[Int, Int].new(
     PWM0, 0,
     PWM1, 1,
     PWM2, 2,
     PWM3, 3,
-    ;
+);
 
 method pwm-pins(--> Hash[Int, Int]) { %PWM-PINS }
+
+my constant %TOUCH-PINS := Hash[Int, Int].new;
+
+method touch-pins(--> Hash[Int, Int]) { %TOUCH-PINS }
 
 =begin pod
 

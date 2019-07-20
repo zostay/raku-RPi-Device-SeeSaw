@@ -38,7 +38,7 @@ RPi::Device::SeeSaw::Interface::I2C - low-level communication over I2C
 
     use v6;
 
-    use RPi::Device::SeeSaw::Interface :short-names;
+    use RPi::Device::SeeSaw::Interface :ALL;
     use RPi::Device::SeeSaw::Interface::I2C;
 
     my $iface = RPi::Device::SeeSaw::Interface::I2C.new;

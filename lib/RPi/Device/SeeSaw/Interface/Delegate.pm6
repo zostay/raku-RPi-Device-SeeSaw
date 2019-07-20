@@ -1,10 +1,11 @@
 use v6;
 
-use RPi::Device::SeeSaw::Interface;
+use RPi::Device::SeeSaw::Interface :ALL;
+use RPi::Device::SeeSaw::Types :ALL;
 
 unit role RPi::Device::SeeSaw::Interface::Delegate does RPi::Device::SeeSaw::Interface;
 
-has RPi::Device::SeeSaw::Interface $.delgate is required;
+has RPi::Device::SeeSaw::Interface $.delegate is required;
 
 method do-read(I2CReadLength:D $length --> blob8:D) {
     $.delegate.do-read($length);
@@ -24,7 +25,7 @@ RPi::Device::SeeSaw::Interface::Delegate - delegate low-level communication to a
 
     use v6;
 
-    use RPi::Device::SeeSaw::Interface :short-names;
+    use RPi::Device::SeeSaw::Interface :ALL;
     use RPi::Device::SeeSaw::Interface::I2C;
     use RPi::Device::SeeSaw::Interface::Delegate;
 

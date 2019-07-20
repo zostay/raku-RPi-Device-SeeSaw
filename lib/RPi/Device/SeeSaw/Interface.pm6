@@ -1,15 +1,15 @@
 use v6;
 
-unit role RPi::Device::SeeSaw::Interface;
+use RPi::Device::SeeSaw::Types :ALL;
 
-our constant SEESAW-DEFAULT-ADDRESS = 0x49;
+unit package RPi::Device::SeeSaw;
 
-has &.flow;
+our constant EEPROM-I2C-ADDR = 0x3F;
 
-subset I2CReadLength of UInt where 32 >= * >= 1 is export(:short-names);
+subset I2CReadLength is export(:i2c) of UInt where 32 >= * >= 1;
 
 # Module Base Addresses
-enum (
+enum Register-Base is export(:base, :registers) (
     Status-Base    => 0x00,
     GPIO-Base      => 0x01,
     SerCom0-Base   => 0x02,
@@ -24,10 +24,10 @@ enum (
     Touch-Base     => 0x0F,
     Keypad-Base    => 0x10,
     Encoder-Base   => 0x11,
-) is export(:short-names);
+);
 
 # GPIO module function address registers
-enum (
+enum GPIO-Register is export(:registers, :gpio) (
     GPIO-DirSet-Bulk => 0x02,
     GPIO-DirClr-Bulk => 0x03,
     GPIO-Bulk        => 0x04,
@@ -39,198 +39,203 @@ enum (
     GPIO-IntFlag     => 0x0A,
     GPIO-PullEnSet   => 0x0B,
     GPIO-PullEnClr   => 0x0C,
-) is export(:short-names);
+);
 
 # Status module funcction address registers
-enum (
+enum Status-Register is export(:registers, :status) (
     Status-Hw-ID   => 0x01,
     Status-Version => 0x02,
     Status-Options => 0x03,
     Status-Temp    => 0x04,
     Status-SwRst   => 0x7F,
-) is export(:short-names);
+);
 
 # Timer module function address registers
-enum (
+enum Timer-Register is export(:registers, :timer) (
     Timer-Status => 0x00,
     Timer-PWM    => 0x01,
     Timer-Freq   => 0x02,
-) is export(:short-names);
+);
 
 # ADC module function address registers
-enum (
+enum ADC-Register is export(:registers, :adc) (
     ADC-Status         => 0x00,
     ADC-IntEn          => 0x02,
     ADC-IntEnClr       => 0x03,
     ADC-WinMode        => 0x04,
     ADC-WinThresh      => 0x05,
     ADC-Channel-Offset => 0x07,
-) is export(:short-names);
+);
 
 # SerCom module function address registers
-enum (
+enum SerCom-Register is export(:registers, :sercom) (
     SerCom-Status   => 0x00,
     SerCom-IntEn    => 0x02,
     SerCom-IntEnClr => 0x03,
     SerCom-Baud     => 0x04,
     SerCom-Data     => 0x05,
-) is export(:short-names);
+);
 
 # NeoPixel module function address registers
-enum (
+enum NeoPixel-Register is export(:registers, :neopixel) (
     NeoPixel-Status     => 0x00,
     NeoPixel-Pin        => 0x01,
     NeoPixel-Speed      => 0x02,
     NeoPixel-Buf-Length => 0x03,
     NeoPixel-Buf        => 0x04,
     NeoPixel-Show       => 0x05,
-) is export(:short-names);
+);
 
 # Touch module function address registers
-enum (
+enum Touch-Register is export(:registers, :touch) (
     Touch-Channel-Offset => 0x10,
-) is export(:short-names);
+);
 
 # Keypad module function address registers
-enum (
+enum Keypad-Register is export(:registers, :keypad) (
     Keypad-Status   => 0x00,
     Keypad-Event    => 0x01,
     Keypad-IntEnSet => 0x02,
     Keypad-IntEnClr => 0x03,
     Keypad-Count    => 0x04,
     Keypad-FIFO     => 0x10,
-) is export(:short-names);
+);
 
 # Keypad module edge definitions
-enum KeypadEdge <
+enum KeypadEdge is export(:registers, :keypad, :keypad-edge) <
     Keypad-Edge-High
     Keypad-Edge-Low
     Keypad-Edge-Falling
     Keypad-Edge-Rising
-> is export(:short-names);
+>;
 
 # Encoder module function address registers
-enum (
+enum Encoder-Register is export(:registers, :encoder) (
     Encoder-Status   => 0x00,
     Encoder-IntEnSet => 0x02,
     Encoder-IntEnClr => 0x03,
     Encoder-Position => 0x04,
     Encoder-Delta    => 0x05,
-) is export(:short-names);
+);
 
-method read-uint64(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> ULongLong:D) {
-    my $buf = self.read: $reg-base, $reg, 8, :$delay;
-    $buf.read-uint64(0, BigEndian);
-}
+role RPi::Device::SeeSaw::Interface {
 
-method read-uint32(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> ULong:D) {
-    my $buf = self.read: $reg-base, $reg, 4, :$delay;
-    $buf.read-uint32(0, BigEndian);
-}
+    has &.flow;
 
-method read-uint16(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> UShort:D) {
-    my $buf = self.read: $reg-base, $reg, 2, :$delay;
-    $buf.read-uint16(0, BigEndian);
-}
-
-method read-uint8(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> UByte:D) {
-    my $buf = self.read: $reg-base, $reg, 1, :$delay;
-    $buf.read-uint8(0, BigEndian);
-}
-
-method read-int64(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> LongLong:D) {
-    my $buf = self.read: $reg-base, $reg, 8, :$delay;
-    $buf.read-int64(0, BigEndian);
-}
-
-method read-int32(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> Long:D) {
-    my $buf = self.read: $reg-base, $reg, 4, :$delay;
-    $buf.read-int32(0, BigEndian);
-}
-
-method read-int16(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> Short:D) {
-    my $buf = self.read: $reg-base, $reg, 2, :$delay;
-    $buf.read-int16(0, BigEndian);
-}
-
-method read-int8(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> Byte:D) {
-    my $buf = self.read: $reg-base, $reg, 1, :$delay;
-    $buf.read-int8(0, BigEndian);
-}
-
-method read(UByte:D $reg-base, UByte:D $reg, I2CReadLength:D $length, Rat:D() :$delay = 0.001 --> blob8:D) {
-    do-write($reg-base, $reg);
-
-    sleep $delay;
-    with &.flow {
-        until flow() { #`[nop] }
+    method read-uint64(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> ULongLong:D) {
+        my $buf = self.read: $reg-base, $reg, 8, :$delay;
+        $buf.read-uint64(0, BigEndian);
     }
 
-    do-read($reg-base, $reg, $length, $delay);
-}
-
-method do-read(I2CReadLength:D $length, Rat:D() $delay --> blob8:D) {
-    ...
-}
-
-method write-uint64(UByte:D $reg-base, UByte:D $reg, ULongLong:D $value) {
-    my buf8 $buf .= new;
-    $buf.write-uint64($value);
-    self.write($reg-base, $reg, $buf);
-}
-
-method write-uint32(UByte:D $reg-base, UByte:D $reg, ULong:D $value) {
-    my buf8 $buf .= new;
-    $buf.write-uint32($value);
-    self.write($reg-base, $reg, $buf);
-}
-
-method write-uint16(UByte:D $reg-base, UByte:D $reg, UShort:D $value) {
-    my buf8 $buf .= new;
-    $buf.write-uint16($value);
-    self.write($reg-base, $reg, $buf);
-}
-
-method write-uint8(UByte:D $reg-base, UByte:D $reg, UByte:D $value) {
-    my buf8 $buf .= new;
-    $buf.write-uint8($value);
-    self.write($reg-base, $reg, $buf);
-}
-
-method write-int64(UByte:D $reg-base, UByte:D $reg, LongLong:D $value) {
-    my buf8 $buf .= new;
-    $buf.write-int64($value);
-    self.write($reg-base, $reg, $buf);
-}
-
-method write-int32(UByte:D $reg-base, UByte:D $reg, Long:D $value) {
-    my buf8 $buf .= new;
-    $buf.write-int32($value);
-    self.write($reg-base, $reg, $buf);
-}
-
-method write-int16(UByte:D $reg-base, UByte:D $reg, Short:D $value) {
-    my buf8 $buf .= new;
-    $buf.write-int16($value);
-    self.write($reg-base, $reg, $buf);
-}
-
-method write-int8(UByte:D $reg-base, UByte:D $reg, Byte:D $value) {
-    my buf8 $buf .= new;
-    $buf.write-int8($value);
-    self.write($reg-base, $reg, $buf);
-}
-
-method write(UByte:D $reg-base, UByte:D $reg, blob8:D $buf = blob8.new) {
-    with &.flow {
-        until flow() { #`[nop] }
+    method read-uint32(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> ULong:D) {
+        my $buf = self.read: $reg-base, $reg, 4, :$delay;
+        $buf.read-uint32(0, BigEndian);
     }
 
-    self.do-write($reg-base, $reg, $buf);
-}
+    method read-uint16(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> UShort:D) {
+        my $buf = self.read: $reg-base, $reg, 2, :$delay;
+        $buf.read-uint16(0, BigEndian);
+    }
 
-method do-write(UByte:D $reg-base, UByte:D $reg, blob8:D $buf = blob8.new) {
-    ...
+    method read-uint8(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> UByte:D) {
+        my $buf = self.read: $reg-base, $reg, 1, :$delay;
+        $buf.read-uint8(0, BigEndian);
+    }
+
+    method read-int64(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> LongLong:D) {
+        my $buf = self.read: $reg-base, $reg, 8, :$delay;
+        $buf.read-int64(0, BigEndian);
+    }
+
+    method read-int32(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> Long:D) {
+        my $buf = self.read: $reg-base, $reg, 4, :$delay;
+        $buf.read-int32(0, BigEndian);
+    }
+
+    method read-int16(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> Short:D) {
+        my $buf = self.read: $reg-base, $reg, 2, :$delay;
+        $buf.read-int16(0, BigEndian);
+    }
+
+    method read-int8(UByte:D $reg-base, UByte:D $reg, Rat:D() :$delay = 0.001 --> Byte:D) {
+        my $buf = self.read: $reg-base, $reg, 1, :$delay;
+        $buf.read-int8(0, BigEndian);
+    }
+
+    method read(UByte:D $reg-base, UByte:D $reg, I2CReadLength:D $length, Rat:D() :$delay = 0.001 --> blob8:D) {
+        self.do-write($reg-base, $reg);
+
+        sleep $delay;
+        with &.flow {
+            until &.flow.() { #`[nop] }
+        }
+
+        self.do-read($length);
+    }
+
+    method do-read(I2CReadLength:D $length --> blob8:D) {
+        ...
+    }
+
+    method write-uint64(UByte:D $reg-base, UByte:D $reg, ULongLong:D $value) {
+        my buf8 $buf .= new;
+        $buf.write-uint64($value);
+        self.write($reg-base, $reg, $buf);
+    }
+
+    method write-uint32(UByte:D $reg-base, UByte:D $reg, ULong:D $value) {
+        my buf8 $buf .= new;
+        $buf.write-uint32($value);
+        self.write($reg-base, $reg, $buf);
+    }
+
+    method write-uint16(UByte:D $reg-base, UByte:D $reg, UShort:D $value) {
+        my buf8 $buf .= new;
+        $buf.write-uint16($value);
+        self.write($reg-base, $reg, $buf);
+    }
+
+    method write-uint8(UByte:D $reg-base, UByte:D $reg, UByte:D $value) {
+        my buf8 $buf .= new;
+        $buf.write-uint8($value);
+        self.write($reg-base, $reg, $buf);
+    }
+
+    method write-int64(UByte:D $reg-base, UByte:D $reg, LongLong:D $value) {
+        my buf8 $buf .= new;
+        $buf.write-int64($value);
+        self.write($reg-base, $reg, $buf);
+    }
+
+    method write-int32(UByte:D $reg-base, UByte:D $reg, Long:D $value) {
+        my buf8 $buf .= new;
+        $buf.write-int32($value);
+        self.write($reg-base, $reg, $buf);
+    }
+
+    method write-int16(UByte:D $reg-base, UByte:D $reg, Short:D $value) {
+        my buf8 $buf .= new;
+        $buf.write-int16($value);
+        self.write($reg-base, $reg, $buf);
+    }
+
+    method write-int8(UByte:D $reg-base, UByte:D $reg, Byte:D $value) {
+        my buf8 $buf .= new;
+        $buf.write-int8($value);
+        self.write($reg-base, $reg, $buf);
+    }
+
+    method write(UByte:D $reg-base, UByte:D $reg, blob8:D $buf = blob8.new) {
+        with &.flow {
+            until &.flow.() { #`[nop] }
+        }
+
+        self.do-write($reg-base, $reg, $buf);
+    }
+
+    method do-write(UByte:D $reg-base, UByte:D $reg, blob8:D $buf = blob8.new) {
+        ...
+    }
 }
 
 =begin pod
@@ -243,7 +248,7 @@ RPi::Device::SeeSaw::Interface - lays out the structure of the low-level interfa
 
     use v6;
 
-    use RPi::Device::SeeSaw::Interface :short-names;
+    use RPi::Device::SeeSaw::Interface :ALL;
 
     unit class RPi::Device::SeeSaw::Interface::Foo does RPi::Device::SeeSaw::Interface;
 
@@ -261,7 +266,7 @@ This role defines the interface for talking to a SeeSaw module. This module also
 
 =head1 CONSTANTS
 
-The following constants are the module base addresses:
+The following constants are the module base addresses, export with C<:base> and C<:registers>:
 
     Status-Base
     GPIO-Base
@@ -278,7 +283,7 @@ The following constants are the module base addresses:
     Keypad-Base
     Encoder-Base
 
-These constants address the GPIO registers:
+These constants address the GPIO registers, exported with C<:registers> and C<:gpio>:
 
     GPIO-DirSet-Bulk
     GPIO-DirClr-Bulk
@@ -292,7 +297,7 @@ These constants address the GPIO registers:
     GPIO-PullEnSet
     GPIO-PullEnClr
 
-These constants address the Status registers:
+These constants address the Status registers, exported with C<:registers> and C<:status>:
 
     Status-Hw-ID
     Status-Version
@@ -300,13 +305,13 @@ These constants address the Status registers:
     Status-Temp
     Status-SwRst
 
-These constants address the Timer registers:
+These constants address the Timer registers, exported with C<:registers> and C<:status>:
 
     Timer-Status
     Timer-PWM
     Timer-Freq
 
-These constants address the ADC registers:
+These constants address the ADC registers, exported with C<:registers> and C<:adc>:
 
     ADC-Status
     ADC-IntEn
@@ -315,7 +320,7 @@ These constants address the ADC registers:
     ADC-WinThresh
     ADC-Channel-Offset
 
-These constants address teh SerCom registers:
+These constants address teh SerCom registers, exported with C<:registers> and C<:sercom>:
 
     SerCom-Status
     SerCom-IntEn
@@ -323,7 +328,7 @@ These constants address teh SerCom registers:
     SerCom-Baud
     SerCom-Data
 
-These constants address teh NeoPixel registers:
+These constants address teh NeoPixel registers, exported with C<:registers> and C<:neopixel>:
 
     NeoPixel-Status
     NeoPixel-Pin
@@ -332,11 +337,11 @@ These constants address teh NeoPixel registers:
     NeoPixel-Buf
     NeoPixel-Show
 
-These constants address the touch registers:
+These constants address the touch registers, exported with C<:registers> and C<:touch>:
 
     Touch-Channel-Offset
 
-These constants address the Keypad registers:
+These constants address the Keypad registers, exported with C<:registers> and C<:keypad>:
 
     Keypad-Status
     Keypad-Event
@@ -345,14 +350,14 @@ These constants address the Keypad registers:
     Keypad-Count
     Keypad-FIFO
 
-These are the keypad module edge definitions:
+These are the keypad module edge definitions, exported with C<:registers>, C<:keypad>, and C<:keypad-edge>:
 
     Keypad-Edge-High
     Keypad-Edge-Low
     Keypad-Edge-Falling
     Keypad-Edge-Rising
 
-These constants address the encoder registers:
+These constants address the encoder registers, exported with C<:registers> and C<:encoder>:
 
     Encoder-Status
     Encoder-IntEnSet

@@ -1,20 +1,18 @@
 use v6;
 
-use RPi::Device::SeeSaw::Interface :short-names;
-use RPi::Device::SeeSaw::Interface::I2C;
-use RPi::Device::SeeSaw::Types :short-names;
+use RPi::Device::SeeSaw::Interface :ALL;
+use RPi::Device::SeeSaw::Interface::Delegate;
+use RPi::Device::SeeSaw::Types :ALL;
 use RPi::Device::SeeSaw::Keypad;
 
 unit role RPi::Device::SeeSaw::Common does RPi::Device::SeeSaw::Interface::Delegate;
-
-constant HW-ID-CODE      = 0x55;
-constant EEPROM-I2C-ADDR = 0x3F;
 
 my constant CRICKIT-PID    = 9999;
 my constant ROBOHATMM1-PID = 9998;
 
 method adc-pins(--> Hash[Int, Int]) { ... }
 method pwm-pins(--> Hash[Int, Int]) { ... }
+method touch-pins(--> Hash[Int, Int]) { ... }
 
 method software-reset() {
     self.write: Status-Base, Status-SwRst, blob8.new(0xFF);
@@ -62,7 +60,9 @@ multi method pin-mode-bulk(
 
 multi method analog-write(PinNumber:D $pin, UShort:D $value) {
     with $.pwm-pins.{ $pin } -> $offset {
-        self.write-uint16: Timer-Base, Timer-PWM, $value;
+        my blob8 $cmd .= new($offset);
+        $cmd.write-uint16: 1, $value, BigEndian;
+        self.write: Timer-Base, Timer-PWM, $cmd;
     }
     else {
         die "Invalid PWM pin";
@@ -81,7 +81,7 @@ multi method digital-write-bulk(
     self.write-uint64: GPIO-Base, $op, $pins;
 }
 
-method digital-read(PinNumber:D $pin --> Bool:D $value) {
+method digital-read(PinNumber:D $pin --> Bool:D) {
     self.digital-read-bulk +& (1 +< $pin) != 0;
 }
 
@@ -92,7 +92,7 @@ multi method digital-read-bulk(--> PinBitset:D) {
 method set-gpio-interrupts(PinBitset:D $pins, Bool:D() $enabled) {
     self.write:
         GPIO-Base,
-        $enabled ?? GPIO-ItyEnSet !! GPIO-IntEnClr,
+        $enabled ?? GPIO-IntEnSet !! GPIO-IntEnClr,
         self!bank-select($pins, 'A'),
         ;
 }
@@ -109,11 +109,11 @@ method analog-read(PinNumber:D $pin --> UShort:D) {
 
 method touch-read(PinNumber:D $pin --> UShort:D) {
     die "Invalid touch pin"
-        without $!pin-mapping.touch-pins.{ $pin };
+        without $.touch-pins.{ $pin };
 
     self.read-uint16:
         Touch-Base,
-        Touch-Channel-Offset + $!pin-mapping.touch-pins.{ $pin },
+        Touch-Channel-Offset + $.touch-pins.{ $pin },
         ;
 }
 
@@ -151,23 +151,23 @@ method eeprom-read(UByte:D $addr --> UByte:D) {
     self.read-uint8: EEPROM-Base, $addr;
 }
 
-method set-i2c-address(UByte:D $address) {
-    self.eeprom-write: EEPROM-I2C-Addr, $address;
-    sleep(0.250);
-    $!i2c-bus .= new(device => $i2c-device, address => $i2c-address);
-    self.software-reset;
-}
-
-method get-i2c-address(--> UByte:D) {
-    self.eeprom-read: EEPROM-I2C-Addr;
-}
+# method set-i2c-address(UByte:D $address) {
+#     self.eeprom-write: EEPROM-I2C-Addr, $address;
+#     sleep(0.250);
+#     $!i2c-bus .= new(device => $i2c-device, address => $i2c-address);
+#     self.software-reset;
+# }
+#
+# method get-i2c-address(--> UByte:D) {
+#     self.eeprom-read: EEPROM-I2C-Addr;
+# }
 
 method set-uart-baud(ULong:D $baud) {
     self.write-uint32: SerCom0-Base, SerCom-Baud, $baud;
 }
 
 method set-keypad-event(UByte:D $key, KeypadEdge:D $edge, Bool:D $active) {
-    my RPi::Device::SeeSaw::KeyPad::KeyState $ks .= new(:$edge, :$active);
+    my RPi::Device::SeeSaw::Keypad::KeyState $ks .= new(:$edge, :$active);
     self.write: Keypad-Base, Keypad-Event, blob8.new($key, $ks.register);
 }
 
@@ -194,15 +194,15 @@ method get-temperature(--> UShortRat:D) {
     $value / 65536;
 }
 
-method get-encoder-position(--> LongInt:D) {
+method get-encoder-position(--> Long:D) {
     self.read-int32: Encoder-Base, Encoder-Position;
 }
 
-method get-encoder-delta(--> LongInt:D) {
+method get-encoder-delta(--> Long:D) {
     self.read-int32: Encoder-Base, Encoder-Delta;
 }
 
-method set-encoder-position(LongInt:D $pos) {
+method set-encoder-position(Long:D $pos) {
     self.write-int32: Encoder-Base, Encoder-Position, $pos;
 }
 
