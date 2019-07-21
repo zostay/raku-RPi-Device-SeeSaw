@@ -171,4 +171,19 @@ is-deeply $iface.output, buf8.new(
 );
 $iface.reset;
 
+my $addr = floor(rand * 64);
+$value = floor(rand * 256);
+$ss.eeprom-write($addr, $value);
+is-deeply $iface.output, buf8.new(
+    EEPROM-Base, $addr, $value
+);
+$iface.reset;
+
+$addr = floor(rand * 64);
+$ss.eeprom-read($addr);
+is-deeply $iface.output, buf8.new(
+    EEPROM-Base, $addr,
+);
+$iface.reset;
+
 done-testing;
