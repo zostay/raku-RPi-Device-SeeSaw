@@ -124,7 +124,7 @@ method disable-sercom-data-ready-interrupt(UByte:D $sercom = 0) {
     self.write-uint8: SerCom0-Base + $sercom, SerCom-IntEn, 0;
 }
 
-method read-sercome-data(UByte:D $sercom = 0 --> UByte:D) {
+method read-sercom-data(UByte:D $sercom = 0 --> UByte:D) {
     self.read-uint8: SerCom0-Base + $sercom, SerCom-Data;
 }
 

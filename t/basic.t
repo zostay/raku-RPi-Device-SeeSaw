@@ -150,4 +150,25 @@ is-deeply $iface.output, buf8.new(
 );
 $iface.reset;
 
+$channel = floor(rand * 4);
+$ss.enable-sercom-data-ready-interrupt($channel);
+is-deeply $iface.output, buf8.new(
+    SerCom0-Base + $channel, SerCom-IntEn, 1,
+);
+$iface.reset;
+
+$channel = floor(rand * 4);
+$ss.disable-sercom-data-ready-interrupt($channel);
+is-deeply $iface.output, buf8.new(
+    SerCom0-Base + $channel, SerCom-IntEn, 0,
+);
+$iface.reset;
+
+$channel = floor(rand * 4);
+$ss.read-sercom-data($channel);
+is-deeply $iface.output, buf8.new(
+    SerCom0-Base + $channel, SerCom-Data;
+);
+$iface.reset;
+
 done-testing;
