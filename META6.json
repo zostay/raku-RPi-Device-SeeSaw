@@ -1,0 +1,44 @@
+{
+  "name": "RPi::Device::SeeSaw",
+  "provides": {
+    "RPi::Device::Crickit": "lib/RPi/Device/Crickit.pm6",
+    "RPi::Device::SeeSaw": "lib/RPi/Device/SeeSaw.pm6",
+    "RPi::Device::SeeSaw::Common": "lib/RPi/Device/SeeSaw/Common.pm6",
+    "RPi::Device::SeeSaw::Interface": "lib/RPi/Device/SeeSaw/Interface.pm6",
+    "RPi::Device::SeeSaw::Interface::Delegate": "lib/RPi/Device/SeeSaw/Interface/Delegate.pm6",
+    "RPi::Device::SeeSaw::Interface::IC2": "lib/RPi/Device/SeeSaw/Interface/I2C.pm6",
+    "RPi::Device::SeeSaw::Interface::Test": "lib/RPi/Device/SeeSaw/Interface/Test.pm6",
+    "RPi::Device::SeeSaw::Keypad": "lib/RPi/Device/SeeSaw/Keypad.pm6",
+    "RPi::Device::SeeSaw::Touch": "lib/RPi/Device/SeeSaw/Touch.pm6",
+    "RPi::Device::SeeSaw::Types": "lib/RPi/Device/SeeSaw/Types.pm6"
+  },
+  "source-url": "git://github.com/zostay/p6-RPi-Device-SeeSaw.git",
+  "license": "Artistic-2.0",
+  "build-depends": [
+
+  ],
+  "tags": [
+
+  ],
+  "version": "0.4.1",
+  "meta-version": "0",
+  "support": {
+    "source": null
+  },
+  "depends": [
+
+  ],
+  "resources": [
+
+  ],
+  "description": "Communicate with Adafruit SeeSaw devices from Raspberry Pi",
+  "perl": "6.c",
+  "auth": "github:zostay",
+  "authors": [
+    "Sterling Hanenkamp <hanenkamp@cpan.org>"
+  ],
+  "test-depends": [
+    "Test",
+    "Test::META"
+  ]
+}
