@@ -134,4 +134,12 @@ is-deeply $iface.output, buf8.new(
 );
 $iface.reset;
 
+$channel = $ss.adc-pins.pick;
+$ss.analog-read($channel.key);
+is-deeply $iface.output, buf8.new(
+    ADC-Base,
+    ADC-Channel-Offset + $channel.value,
+);
+$iface.reset;
+
 done-testing;
