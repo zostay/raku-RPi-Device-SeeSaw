@@ -179,25 +179,25 @@ role RPi::Device::SeeSaw::Interface {
 
     method write-uint64(UByte:D $reg-base, UByte:D $reg, ULongLong:D $value) {
         my buf8 $buf .= new;
-        $buf.write-uint64($value);
+        $buf.write-uint64(0, $value, BigEndian);
         self.write($reg-base, $reg, $buf);
     }
 
     method write-uint32(UByte:D $reg-base, UByte:D $reg, ULong:D $value) {
         my buf8 $buf .= new;
-        $buf.write-uint32($value);
+        $buf.write-uint32(0, $value, BigEndian);
         self.write($reg-base, $reg, $buf);
     }
 
     method write-uint16(UByte:D $reg-base, UByte:D $reg, UShort:D $value) {
         my buf8 $buf .= new;
-        $buf.write-uint16($value);
+        $buf.write-uint16(0, $value, BigEndian);
         self.write($reg-base, $reg, $buf);
     }
 
     method write-uint8(UByte:D $reg-base, UByte:D $reg, UByte:D $value) {
         my buf8 $buf .= new;
-        $buf.write-uint8($value);
+        $buf.write-uint8(0, $value, BigEndian);
         self.write($reg-base, $reg, $buf);
     }
 
