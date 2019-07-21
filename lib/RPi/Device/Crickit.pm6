@@ -2,7 +2,7 @@ use v6;
 
 use RPi::Device::SeeSaw::Common;
 
-unit class RPi::Device::Crickit does RPi::Device::SeeSaw::Common;
+unit class RPi::Device::Crickit does RPi::Device::SeeSaw::Common does RPi::Device::SeeSaw::Touch;
 
 our constant DEFAULT-ADDRESS = 0x49;
 

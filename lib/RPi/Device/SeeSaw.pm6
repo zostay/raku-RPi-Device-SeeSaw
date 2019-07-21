@@ -38,10 +38,6 @@ my constant %PWM-PINS := Hash[Int, Int].new(
 
 method pwm-pins(--> Hash[Int, Int]) { %PWM-PINS }
 
-my constant %TOUCH-PINS := Hash[Int, Int].new;
-
-method touch-pins(--> Hash[Int, Int]) { %TOUCH-PINS }
-
 =begin pod
 
 =head1 NAME
@@ -226,15 +222,6 @@ Enables change detection using interrupts. When enabled, the IRQ pin can be used
     )
 
 Retrieves the ADC value from the given ADC channel, C<$channel>.
-
-=head2 method touch-read
-
-    multi method touch-read(
-        PinNumber:D $channel,
-        --> UShort:D
-    )
-
-Retrieves the analog value of a touch pad for the given touch channel, C<$channel>.
 
 =head2 method set-pwm-frequency
 

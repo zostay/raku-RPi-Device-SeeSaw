@@ -12,7 +12,6 @@ my constant ROBOHATMM1-PID = 9998;
 
 method adc-pins(--> Hash[Int, Int]) { ... }
 method pwm-pins(--> Hash[Int, Int]) { ... }
-method touch-pins(--> Hash[Int, Int]) { ... }
 
 method software-reset() {
     self.write: Status-Base, Status-SwRst, blob8.new(0xFF);
@@ -104,16 +103,6 @@ method analog-read(PinNumber:D $pin --> UShort:D) {
     self.read-uint16:
         ADC-Base,
         ADC-Channel-Offset + $.adc-pins.{ $pin },
-        ;
-}
-
-method touch-read(PinNumber:D $pin --> UShort:D) {
-    die "Invalid touch pin"
-        without $.touch-pins.{ $pin };
-
-    self.read-uint16:
-        Touch-Base,
-        Touch-Channel-Offset + $.touch-pins.{ $pin },
         ;
 }
 
