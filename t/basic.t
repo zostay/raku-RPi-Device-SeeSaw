@@ -142,4 +142,12 @@ is-deeply $iface.output, buf8.new(
 );
 $iface.reset;
 
+$channel = $ss.pwm-pins.pick;
+$value = floor(rand * 65536);
+$ss.set-pwm-frequency($channel.key, $value);
+is-deeply $iface.output, buf8.new(
+    Timer-Base, Timer-Freq, value2bytes($value, 16)
+);
+$iface.reset;
+
 done-testing;

@@ -108,7 +108,7 @@ method analog-read(PinNumber:D $pin --> UShort:D) {
 
 method set-pwm-frequency(PinNumber:D $pin, UShort:D $value) {
     with $.pwm-pins.{ $pin } -> $offset {
-        self.write-uint16: Timer-Base, Timer-PWM, $value;
+        self.write-uint16: Timer-Base, Timer-Freq, $value;
         sleep 0.001;
     }
     else {
