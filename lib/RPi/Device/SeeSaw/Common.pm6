@@ -60,7 +60,7 @@ multi method pin-mode-bulk(
 
 multi method analog-write(PinNumber:D $pin, UShort:D $value) {
     with $.pwm-pins.{ $pin } -> $offset {
-        my blob8 $cmd .= new($offset);
+        my buf8 $cmd .= new($offset);
         $cmd.write-uint16: 1, $value, BigEndian;
         self.write: Timer-Base, Timer-PWM, $cmd;
     }
