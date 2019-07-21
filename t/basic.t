@@ -9,12 +9,14 @@ use RPi::Device::SeeSaw::Interface::Test;
 
 my $pin;
 sub repin { $pin = floor(rand * 64) }
-
 sub pin2bulk {
     my buf8 $buf .= new;
     $buf.write-uint64: 0, 1 +< $pin, BigEndian;
     @$buf;
 }
+
+my $bulk;
+sub rebulk { $bulk = floor(rand * 0xFFFF_FFFF_FFFF_FFFF) }
 
 sub value2bytes($v, $bits) {
     my $bytes = $bits div 8;
@@ -78,6 +80,34 @@ my $value = floor(rand * 65536);
 $ss.analog-write($channel.key, $value);
 is-deeply $iface.output, buf8.new(
     Timer-Base, Timer-PWM, $channel.value, value2bytes($value, 16),
+);
+$iface.reset;
+
+repin;
+$ss.digital-write($pin, True);
+is-deeply $iface.output, buf8.new(
+    GPIO-Base, GPIO-Bulk-Set, pin2bulk,
+);
+$iface.reset;
+
+repin;
+$ss.digital-write($pin, False);
+is-deeply $iface.output, buf8.new(
+    GPIO-Base, GPIO-Bulk-Clr, pin2bulk,
+);
+$iface.reset;
+
+rebulk;
+$ss.digital-write-bulk($bulk, True);
+is-deeply $iface.output, buf8.new(
+    GPIO-Base, GPIO-Bulk-Set, value2bytes($bulk, 64)
+);
+$iface.reset;
+
+rebulk;
+$ss.digital-write-bulk($bulk, False);
+is-deeply $iface.output, buf8.new(
+    GPIO-Base, GPIO-Bulk-Clr, value2bytes($bulk, 64)
 );
 $iface.reset;
 
