@@ -171,6 +171,12 @@ is-deeply $iface.output, buf8.new(
 );
 $iface.reset;
 
+$ss.set-uart-baud(9600);
+is-deeply $iface.output, buf8.new(
+    SerCom0-Base, SerCom-Baud, value2byte(9600, 32),
+);
+$iface.reset;
+
 my $addr = floor(rand * 64);
 $value = floor(rand * 256);
 $ss.eeprom-write($addr, $value);
