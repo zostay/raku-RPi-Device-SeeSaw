@@ -173,7 +173,7 @@ $iface.reset;
 
 $ss.set-uart-baud(9600);
 is-deeply $iface.output, buf8.new(
-    SerCom0-Base, SerCom-Baud, value2byte(9600, 32),
+    SerCom0-Base, SerCom-Baud, value2bytes(9600, 32),
 );
 $iface.reset;
 
