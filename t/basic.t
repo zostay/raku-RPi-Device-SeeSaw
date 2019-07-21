@@ -120,4 +120,18 @@ $ss.digital-read-bulk;
 is-deeply $iface.output, buf8.new(GPIO-Base, GPIO-Bulk);
 $iface.reset;
 
+rebulk;
+$ss.set-gpio-interrupts($bulk, True);
+is-deeply $iface.output, buf8.new(
+    GPIO-Base, GPIO-IntEnSet, value2bytes($bulk, 64)
+);
+$iface.reset;
+
+rebulk;
+$ss.set-gpio-interrupts($bulk, False);
+is-deeply $iface.output, buf8.new(
+    GPIO-Base, GPIO-IntEnClr, value2bytes($bulk, 64)
+);
+$iface.reset;
+
 done-testing;

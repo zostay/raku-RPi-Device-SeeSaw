@@ -90,10 +90,10 @@ multi method digital-read-bulk(--> PinBitset:D) {
 }
 
 method set-gpio-interrupts(PinBitset:D $pins, Bool:D() $enabled) {
-    self.write:
+    self.write-uint64:
         GPIO-Base,
         $enabled ?? GPIO-IntEnSet !! GPIO-IntEnClr,
-        self!bank-select($pins, 'A'),
+        $pins,
         ;
 }
 
