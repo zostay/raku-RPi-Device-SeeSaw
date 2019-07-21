@@ -10,7 +10,7 @@ enum PinMode is export(:pins) <
 >;
 
 subset PinNumber is export(:pins) of UInt where * < 64;
-subset PinBitset is export(:pins) of UInt where 0xFFFF_FFFF_FFFF_FFFF >= * > 0x0000_0000;
+subset PinBitset is export(:pins) of UInt where 0xFFFF_FFFF_FFFF_FFFF >= * >= 0;
 
 subset UByte is export(:unsigned) of UInt where 0xFF >= *;
 subset UShort is export(:unsigned) of UInt where 0xFFFF >= *;

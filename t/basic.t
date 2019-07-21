@@ -111,4 +111,13 @@ is-deeply $iface.output, buf8.new(
 );
 $iface.reset;
 
+repin;
+$ss.digital-read($pin);
+is-deeply $iface.output, buf8.new(GPIO-Base, GPIO-Bulk);
+$iface.reset;
+
+$ss.digital-read-bulk;
+is-deeply $iface.output, buf8.new(GPIO-Base, GPIO-Bulk);
+$iface.reset;
+
 done-testing;
